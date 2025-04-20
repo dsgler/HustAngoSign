@@ -66,8 +66,8 @@ export default function SseBar() {
     es.addEventListener('open', () => {
       setSseState(accountState.logged);
       timerId.current = setTimeout(() => {
-        setSseState(accountState.logFailed);
         close();
+        setSseState(accountState.logFailed);
       }, 10000);
     });
     es.addEventListener('error', errHandler);
@@ -77,8 +77,8 @@ export default function SseBar() {
     es.addEventListener('ping', () => {
       clearTimeout(timerId.current);
       timerId.current = setTimeout(() => {
-        setSseState(accountState.logFailed);
         close();
+        setSseState(accountState.logFailed);
       }, 10000);
     });
     es.addEventListener('qr', (e) => {
