@@ -1,0 +1,76 @@
+import myAlert from '@/components/myAlert';
+import { AccountsCtx } from '@/contexts/accounts';
+import { router, useLocalSearchParams } from 'expo-router';
+import { useContext, useEffect, useRef, useState } from 'react';
+import { Pressable, StyleSheet, TextInput, Text } from 'react-native';
+import { SafeAreaView } from 'react-native-safe-area-context';
+import { z } from 'zod';
+
+const userIdScheme = z.string().length(10, '长度错误');
+const passwdScheme = z.string().min(6, '长度错误');
+
+export default function AddOrEditUser() {
+  const { userId } = useLocalSearchParams<{ userId?: string }>();
+  const isAdd = useRef(!userId);
+  const as = useContext(AccountsCtx);
+  console.log('isAdd', isAdd);
+
+  const [UserId, setUserId] = useState(userId ?? '');
+  const [Passwd, setPasswd] = useState('');
+
+  useEffect(() => {
+    if (!isAdd.current) {
+      if (!userId || !as.getUser(userId)) {
+        myAlert('找不到用户', '将变为添加模式');
+        isAdd.current = true;
+      }
+    }
+  }, [as, userId]);
+
+  return (
+    <SafeAreaView style={{ flex: 1, paddingHorizontal: 20, paddingTop: 20 }}>
+      <TextInput
+        style={styles.TextInput}
+        value={UserId}
+        onChangeText={setUserId}
+        placeholder="请输入用户ID"
+      />
+      <TextInput
+        style={styles.TextInput}
+        value={Passwd}
+        onChangeText={setPasswd}
+        placeholder="请输入密码"
+      />
+      <Pressable
+        onPress={() => {
+          let u: string;
+          let p: string;
+          try {
+            u = userIdScheme.parse(UserId);
+            p = passwdScheme.parse(Passwd);
+          } catch (e) {
+            myAlert('参数错误', e instanceof Error ? e.message : '');
+            return;
+          }
+
+          if (isAdd.current) {
+            as.addUser(u, p);
+          } else {
+            as.editUser(userId!, UserId, Passwd);
+          }
+          router.back();
+        }}
+      >
+        <Text style={{ fontSize: 16, textAlign: 'center' }}>提交</Text>
+      </Pressable>
+    </SafeAreaView>
+  );
+}
+
+const styles = StyleSheet.create({
+  TextInput: {
+    lineHeight: 32,
+    padding: 0,
+    margin: 0,
+  },
+});
