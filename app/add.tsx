@@ -13,7 +13,6 @@ export default function AddOrEditUser() {
   const { userId } = useLocalSearchParams<{ userId?: string }>();
   const isAdd = useRef(!userId);
   const as = useContext(AccountsCtx);
-  console.log('isAdd', isAdd);
 
   const [UserId, setUserId] = useState(userId ?? '');
   const [Passwd, setPasswd] = useState('');
