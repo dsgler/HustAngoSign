@@ -1,5 +1,5 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { useContext, useState } from 'react';
+import { useCallback, useContext, useState } from 'react';
 import {
   NativeModules,
   Pressable,
@@ -25,6 +25,7 @@ import { AncheckInterface } from '@/NativeModules/Anchek';
 import myAlert from '@/components/myAlert';
 import { accountState } from '@/types/accountState';
 import { getQrSignInUrl } from '@/constants/urls';
+import { useFocusEffect } from 'expo-router';
 
 const AnimatedCameraView = Animated.createAnimatedComponent(CameraView);
 
@@ -34,6 +35,14 @@ export default function HomeScreen() {
   if (!permission?.granted) {
     requestPermission();
   }
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        setIsActive(false);
+      };
+    }, []),
+  );
 
   const as = useContext(AccountsCtx);
   const Ancheck: AncheckInterface = NativeModules.Ancheck;
