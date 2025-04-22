@@ -24,6 +24,7 @@ import { AccountsCtx } from '@/contexts/accounts';
 import { AncheckInterface } from '@/NativeModules/Anchek';
 import myAlert from '@/components/myAlert';
 import { accountState } from '@/types/accountState';
+import { getQrSignInUrl } from '@/constants/urls';
 
 const AnimatedCameraView = Animated.createAnimatedComponent(CameraView);
 
@@ -79,7 +80,22 @@ export default function HomeScreen() {
                       )
                       .forEach((info) => {
                         as.updateState(info.userId, accountState.pending);
-                        Ancheck.get(info.userId, scanned.data)
+                        let QrSignInUrl: string;
+                        try {
+                          QrSignInUrl = getQrSignInUrl(scanned.data);
+                        } catch (e) {
+                          myAlert(
+                            '链接错误',
+                            (e instanceof Error
+                              ? e.message
+                              : JSON.stringify(e)) +
+                              ':\n' +
+                              scanned.data,
+                          );
+                          return;
+                        }
+
+                        Ancheck.get(info.userId, QrSignInUrl)
                           .then((v) => {
                             if (v.body.includes('Sign in successfully')) {
                               as.updateState(

@@ -6,6 +6,7 @@ import { useContext } from 'react';
 import { MyCheckBox } from './myCheckBox';
 import { AccountsCtx } from '@/contexts/accounts';
 import myAlert from './myAlert';
+import { smartcoursePrelogin } from '@/constants/urls';
 
 const IconSize = 20;
 
@@ -61,6 +62,9 @@ export default function AccountCard({
                 } else {
                   throw Error('检测登录失败');
                 }
+              })
+              .then(() => {
+                return as.get(info.userId, smartcoursePrelogin);
               })
               .catch((e) => {
                 myAlert('登录错误', e instanceof Error ? e.message : '');
