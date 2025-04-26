@@ -7,6 +7,7 @@ import { MyCheckBox } from './myCheckBox';
 import { AccountsCtx } from '@/contexts/accounts';
 import myAlert from './myAlert';
 import { smartcoursePrelogin } from '@/constants/urls';
+import { LogCtx } from '@/contexts/log';
 
 const IconSize = 20;
 
@@ -16,7 +17,8 @@ export default function AccountCard({
   accountInfo: AccountStoreItem;
 }) {
   const as = useContext(AccountsCtx);
-  console.log(info);
+  const l = useContext(LogCtx);
+  // console.log(info);
 
   return (
     <Pressable
@@ -32,6 +34,7 @@ export default function AccountCard({
         myAlert('确认删除吗？', info.userId, () => {
           as.deleteUser(info.userId);
         });
+        l.addLog('删除用户', info.userId);
       }}
     >
       <View style={{ flex: 1 }}>
@@ -68,6 +71,10 @@ export default function AccountCard({
               })
               .catch((e) => {
                 myAlert('登录错误', e instanceof Error ? e.message : '');
+                l.addLog(
+                  ['登录错误', e instanceof Error ? e.message : ''],
+                  info.userId,
+                );
                 as.updateState(info.userId, accountState.logFailed);
               });
           }}
@@ -81,13 +88,41 @@ export default function AccountCard({
                 if (v) {
                   as.updateState(info.userId, accountState.logged, v);
                   myAlert('登录成功', v);
+                  l.addLog('登录成功', v);
                 } else {
                   throw Error('检测登录失败');
                 }
               })
               .catch((e) => {
                 myAlert('登录错误', e instanceof Error ? e.message : '');
+                l.addLog(
+                  ['登录错误', e instanceof Error ? e.message : ''],
+                  info.userId,
+                );
                 as.updateState(info.userId, accountState.logFailed);
+              });
+          }}
+        />
+        <IconCol
+          name="rocket1"
+          description="自动"
+          onPress={() => {
+            as.autoSign(info.userId)
+              .then(() => {
+                as.updateState(info.userId, accountState.checkSuccess);
+              })
+              .catch((e) => {
+                myAlert(
+                  '发生错误',
+                  e instanceof Error ? e.message : JSON.stringify(e),
+                );
+                l.addLog(
+                  [
+                    '发生错误',
+                    e instanceof Error ? e.message : JSON.stringify(e),
+                  ],
+                  info.userId,
+                );
               });
           }}
         />
@@ -118,7 +153,14 @@ const IconCol = ({
         name={name}
         size={IconSize}
         onPress={onPress}
-        style={{ justifyContent: 'center', alignItems: 'center' }}
+        style={{
+          justifyContent: 'center',
+          alignItems: 'center',
+          textAlign: 'center',
+        }}
+        iconStyle={{
+          marginRight: 0,
+        }}
       />
       <Text>{description}</Text>
     </View>

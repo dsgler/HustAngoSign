@@ -13,6 +13,12 @@ export default function TabsLayout() {
         }}
       />
       <Tabs.Screen
+        name="logs"
+        options={{
+          tabBarIcon: () => <AntIcon name="codesquareo" size={IconSize} />,
+        }}
+      />
+      <Tabs.Screen
         name="scan"
         options={{
           tabBarIcon: () => <AntIcon name="qrcode" size={IconSize} />,

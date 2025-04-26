@@ -16,6 +16,15 @@ export const MyCheckBox = ({
       onPress={() => {
         setIsChecked?.(!isChecked);
       }}
+      style={{
+        justifyContent: 'center',
+        alignItems: 'center',
+        textAlign: 'center',
+        backgroundColor: isChecked ? undefined : 'grey',
+      }}
+      iconStyle={{
+        marginRight: 0,
+      }}
     />
   );
 };

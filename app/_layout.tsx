@@ -1,15 +1,20 @@
 import myAlert from '@/components/myAlert';
 import { AccountsCtx } from '@/contexts/accounts';
+import { LogCtx } from '@/contexts/log';
 import useAccountStore from '@/store/accounts';
+import { useLog } from '@/store/log';
 import { Stack } from 'expo-router';
 
 export default function RootLayout() {
-  const p = useAccountStore();
+  const as = useAccountStore();
+  const l = useLog();
 
   try {
     return (
-      <AccountsCtx.Provider value={p}>
-        <Stack screenOptions={{ headerShown: false }}></Stack>
+      <AccountsCtx.Provider value={as}>
+        <LogCtx.Provider value={l}>
+          <Stack screenOptions={{ headerShown: false }}></Stack>
+        </LogCtx.Provider>
       </AccountsCtx.Provider>
     );
   } catch (e) {

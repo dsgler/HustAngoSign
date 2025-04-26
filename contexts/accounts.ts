@@ -11,4 +11,10 @@ export const AccountsCtx = createContext<ReturnType<typeof useAccountStore>>({
   addUser: defaultErrFunc,
   getUser: defaultErrFunc,
   editUser: defaultErrFunc,
+  autoSign: defaultErrFunc,
+  deleteUser: defaultErrFunc,
+  get: defaultErrFunc,
+  post: defaultErrFunc,
+  Signble: [],
+  updateState: defaultErrFunc,
 });

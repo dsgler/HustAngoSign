@@ -26,6 +26,8 @@ import myAlert from '@/components/myAlert';
 import { accountState } from '@/types/accountState';
 import { getQrSignInUrl } from '@/constants/urls';
 import { useFocusEffect } from 'expo-router';
+import { getIsSignInSuccess } from '@/utils/getIsSignInSuccess';
+import { LogCtx } from '@/contexts/log';
 
 const AnimatedCameraView = Animated.createAnimatedComponent(CameraView);
 
@@ -45,6 +47,7 @@ export default function HomeScreen() {
   );
 
   const as = useContext(AccountsCtx);
+  const l = useContext(LogCtx);
   const Ancheck: AncheckInterface = NativeModules.Ancheck;
 
   const scale = useSharedValue(1);
@@ -80,56 +83,65 @@ export default function HomeScreen() {
                     setScanValue(scanned.data);
                     setIsActive(false);
 
-                    as.accountStore
-                      .filter(
-                        (info) =>
-                          info.isEnabled &&
-                          (info.state === accountState.logged ||
-                            info.state === accountState.checkFailed),
-                      )
-                      .forEach((info) => {
-                        as.updateState(info.userId, accountState.pending);
-                        let QrSignInUrl: string;
-                        try {
-                          QrSignInUrl = getQrSignInUrl(scanned.data);
-                        } catch (e) {
-                          myAlert(
+                    as.Signble.forEach((info) => {
+                      as.updateState(info.userId, accountState.pending);
+                      let QrSignInUrl: string;
+                      try {
+                        QrSignInUrl = getQrSignInUrl(scanned.data);
+                      } catch (e) {
+                        myAlert(
+                          '链接错误',
+                          (e instanceof Error ? e.message : JSON.stringify(e)) +
+                            ':\n' +
+                            scanned.data,
+                        );
+                        l.addLog(
+                          [
                             '链接错误',
                             (e instanceof Error
                               ? e.message
-                              : JSON.stringify(e)) +
-                              ':\n' +
-                              scanned.data,
-                          );
-                          return;
-                        }
+                              : JSON.stringify(e)) + ':\n',
+                            scanned.data,
+                          ],
+                          info.userId,
+                        );
+                        return;
+                      }
 
-                        Ancheck.get(info.userId, QrSignInUrl)
-                          .then((v) => {
-                            if (v.body.includes('Sign in successfully')) {
-                              as.updateState(
-                                info.userId,
-                                accountState.checkSuccess,
-                              );
-                            } else {
-                              as.updateState(
-                                info.userId,
-                                accountState.checkFailed,
-                              );
-                              myAlert('签到返回值错误', JSON.stringify(v));
-                            }
-                          })
-                          .catch((e) => {
+                      Ancheck.get(info.userId, QrSignInUrl)
+                        .then((v) => {
+                          if (getIsSignInSuccess(v.body)) {
+                            as.updateState(
+                              info.userId,
+                              accountState.checkSuccess,
+                            );
+                          } else {
                             as.updateState(
                               info.userId,
                               accountState.checkFailed,
                             );
-                            myAlert(
+                            myAlert('签到返回值错误', JSON.stringify(v));
+                            l.addLog(
+                              ['签到返回值错误', JSON.stringify(v)],
+                              info.userId,
+                            );
+                          }
+                        })
+                        .catch((e) => {
+                          as.updateState(info.userId, accountState.checkFailed);
+                          myAlert(
+                            '发起请求错误,请检查是否已登录',
+                            e && e.message ? e.message : JSON.stringify(e),
+                          );
+                          l.addLog(
+                            [
                               '发起请求错误,请检查是否已登录',
                               e && e.message ? e.message : JSON.stringify(e),
-                            );
-                          });
-                      });
+                            ],
+                            info.userId,
+                          );
+                        });
+                    });
                   }}
                   animatedProps={ap}
                 ></AnimatedCameraView>
