@@ -108,7 +108,7 @@ export default function HomeScreen() {
                         return;
                       }
 
-                      Ancheck.get(info.userId, QrSignInUrl)
+                      Ancheck.get(info.userId, QrSignInUrl, {})
                         .then((v) => {
                           if (getIsSignInSuccess(v.body)) {
                             as.updateState(

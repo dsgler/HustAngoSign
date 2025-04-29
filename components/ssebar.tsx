@@ -102,7 +102,7 @@ export default function SseBar() {
         .forEach((info) => {
           console.log(data);
           as.updateState(info.userId, accountState.pending);
-          Ancheck.get(info.userId, data.data)
+          Ancheck.get(info.userId, data.data, {})
             .then((v) => {
               if (v.body.includes('Sign in successfully')) {
                 as.updateState(info.userId, accountState.checkSuccess);
