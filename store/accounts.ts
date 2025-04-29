@@ -272,20 +272,11 @@ export default function useAccountStore() {
         'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
       });
       const list: SignInListTypes.Response = JSON.parse(ret.body);
-      if (
-        list?.result !== 1 ||
-        !Array.isArray(list?.data?.array) ||
-        list.data.array.length === 0
-      ) {
+      if (list?.result !== 1 || !Array.isArray(list?.data?.array)) {
         throw Error('获取签到列表返回错误\n' + JSON.stringify(ret));
       }
 
-      const signable = list.data.array.filter((v) => {
-        if (!v.endTime) {
-          return true;
-        }
-        return Date.now() < v.endTime;
-      });
+      const signable = list.data.array.filter((v) => v.status === 1);
 
       if (signable.length !== 1) {
         throw Error(
@@ -294,18 +285,29 @@ export default function useAccountStore() {
         );
       }
 
+      addLog(otherIds[signable[0].otherId], userId);
+
       switch (signable[0].otherId) {
         case '2': {
-          throw Error(otherIds['2'] + ',请扫码');
+          throw Error(otherIds[signable[0].otherId] + ',请扫码');
         }
+        case '1':
         case '3': {
-          addLog(otherIds['3'], userId);
           await gestureSign(String(signable[0].id), userId);
           break;
         }
         case '4': {
-          addLog(otherIds['4'], userId);
           await posiSign(String(signable[0].id), userId);
+          break;
+        }
+        case '0': {
+          const ret = await get(
+            userId,
+            getGestureSignInUrl(String(signable[0].id), ''),
+          );
+          if (!getIsSignInSuccess(ret.body)) {
+            throw Error('签到返回值错误' + ret.body);
+          }
           break;
         }
         default: {
@@ -313,7 +315,7 @@ export default function useAccountStore() {
         }
       }
     },
-    [addLog, gestureSign, posiSign, post],
+    [addLog, gestureSign, get, posiSign, post],
   );
 
   return {
