@@ -229,6 +229,9 @@ export default function useAccountStore() {
   const gestureSign = useCallback(
     async (activeId: string, userId: string) => {
       let ret = await get(userId, getPreSignUrl(activeId));
+      if (getIsSignInSuccess(ret.body)) {
+        return;
+      }
 
       const CodeRe = /<input.+id="signCode".+value="(\d+)".+>/;
       const code = ret.body.match(CodeRe)?.[1];
@@ -247,6 +250,9 @@ export default function useAccountStore() {
   const posiSign = useCallback(
     async (activeId: string, userId: string) => {
       let ret = await get(userId, getPreSignUrl(activeId));
+      if (getIsSignInSuccess(ret.body)) {
+        return;
+      }
 
       const posi = getPosition(ret.body);
 
