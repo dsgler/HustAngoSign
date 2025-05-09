@@ -25,6 +25,7 @@ export function getGestureSignInUrl(activeId: string, signCode: string) {
   return `https://smartcourse.hust.edu.cn/mobilewx-smartcourse/widget/weixin/sign/stuSignController/signIn?activeId=${activeId}&wxsn=&signCode=${signCode}&validate=`;
 }
 
+// statusSet=1 表示未完成 ,2 为完成
 export const FirstSignInListBody = String.raw`classIds=&startTimeSet=&endTimeSet=&statusSet=1&reload=0&devices=1&includeWork=0&includeExam=0&includeRead=0`;
 export const FirstSignInListUrl = String.raw`https://smartcourse.hust.edu.cn/ketang-zhizhen-smartcourse/education/student/activelist?DB_STRATEGY=DEFAULT`;
 
