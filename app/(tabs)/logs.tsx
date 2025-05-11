@@ -1,31 +1,28 @@
-import { LogCtx } from '@/contexts/log';
-import { useContext } from 'react';
-import { Pressable, ScrollView, Text, ToastAndroid } from 'react-native';
+import { Pressable, Text, ToastAndroid } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { SafeAreaView } from 'react-native-safe-area-context';
+import { formatLog, useLog } from '@/store/log_zustand';
+import { FlatList } from 'react-native';
 
 export default function Logs() {
-  const l = useContext(LogCtx);
+  const log = useLog((state) => state.logs);
 
   return (
     <SafeAreaView style={{ flex: 1 }}>
-      <ScrollView
-        style={{ flex: 1, paddingTop: 15, paddingHorizontal: 20 }}
-        contentContainerStyle={{ gap: 15 }}
-      >
-        {l.logs.map((v, k) => (
+      <FlatList
+        data={log}
+        renderItem={({ item }) => (
           <Pressable
             onPress={() => {
-              Clipboard.setStringAsync(v).then(() => {
+              Clipboard.setStringAsync(item.toString()).then(() => {
                 ToastAndroid.show('复制成功', ToastAndroid.SHORT);
               });
             }}
-            key={k}
           >
-            <Text style={{ fontSize: 16 }}>{v}</Text>
+            <Text style={{ fontSize: 16 }}>{formatLog(item)}</Text>
           </Pressable>
-        ))}
-      </ScrollView>
+        )}
+      ></FlatList>
     </SafeAreaView>
   );
 }
