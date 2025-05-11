@@ -1,13 +1,6 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { useCallback, useContext, useState } from 'react';
-import {
-  NativeModules,
-  Pressable,
-  StyleSheet,
-  Text,
-  ToastAndroid,
-  View,
-} from 'react-native';
+import { useCallback, useState } from 'react';
+import { Pressable, StyleSheet, Text, ToastAndroid, View } from 'react-native';
 import {
   Gesture,
   GestureDetector,
@@ -20,14 +13,8 @@ import {
 } from 'react-native-reanimated';
 import Animated from 'react-native-reanimated';
 import * as Clipboard from 'expo-clipboard';
-import { AccountsCtx } from '@/contexts/accounts';
-import { AncheckInterface } from '@/NativeModules/Anchek';
-import myAlert from '@/components/myAlert';
-import { accountState } from '@/types/accountState';
-import { getQrSignInUrl } from '@/constants/urls';
 import { useFocusEffect } from 'expo-router';
-import { getIsSignInSuccess } from '@/utils/getIsSignInSuccess';
-import { LogCtx } from '@/contexts/log';
+import { getSignAble, qrSign } from '@/store/accounts_zustand';
 
 const AnimatedCameraView = Animated.createAnimatedComponent(CameraView);
 
@@ -45,10 +32,6 @@ export default function HomeScreen() {
       };
     }, []),
   );
-
-  const as = useContext(AccountsCtx);
-  const l = useContext(LogCtx);
-  const Ancheck: AncheckInterface = NativeModules.Ancheck;
 
   const scale = useSharedValue(1);
   const savedScale = useSharedValue(1);
@@ -83,64 +66,8 @@ export default function HomeScreen() {
                     setScanValue(scanned.data);
                     setIsActive(false);
 
-                    as.Signble.forEach((info) => {
-                      as.updateState(info.userId, accountState.pending);
-                      let QrSignInUrl: string;
-                      try {
-                        QrSignInUrl = getQrSignInUrl(scanned.data);
-                      } catch (e) {
-                        myAlert(
-                          '链接错误',
-                          (e instanceof Error ? e.message : JSON.stringify(e)) +
-                            ':\n' +
-                            scanned.data,
-                        );
-                        l.addLog(
-                          [
-                            '链接错误',
-                            (e instanceof Error
-                              ? e.message
-                              : JSON.stringify(e)) + ':\n',
-                            scanned.data,
-                          ],
-                          info.userId,
-                        );
-                        return;
-                      }
-
-                      Ancheck.get(info.userId, QrSignInUrl, {})
-                        .then((v) => {
-                          if (getIsSignInSuccess(v.body)) {
-                            as.updateState(
-                              info.userId,
-                              accountState.checkSuccess,
-                            );
-                          } else {
-                            as.updateState(
-                              info.userId,
-                              accountState.checkFailed,
-                            );
-                            myAlert('签到返回值错误', JSON.stringify(v));
-                            l.addLog(
-                              ['签到返回值错误', JSON.stringify(v)],
-                              info.userId,
-                            );
-                          }
-                        })
-                        .catch((e) => {
-                          as.updateState(info.userId, accountState.checkFailed);
-                          myAlert(
-                            '发起请求错误,请检查是否已登录',
-                            e && e.message ? e.message : JSON.stringify(e),
-                          );
-                          l.addLog(
-                            [
-                              '发起请求错误,请检查是否已登录',
-                              e && e.message ? e.message : JSON.stringify(e),
-                            ],
-                            info.userId,
-                          );
-                        });
+                    Object.values(getSignAble()).forEach((info) => {
+                      qrSign(info.userId, scanned.data);
                     });
                   }}
                   animatedProps={ap}

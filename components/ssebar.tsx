@@ -1,20 +1,12 @@
-import { AccountsCtx } from '@/contexts/accounts';
 import { accountState, accountStateColor } from '@/types/accountState';
 import { myEvents } from '@/types/sseEvents';
 import { router } from 'expo-router';
-import { useContext, useEffect, useRef, useState } from 'react';
-import {
-  Pressable,
-  TextInput,
-  View,
-  Text,
-  StyleSheet,
-  NativeModules,
-} from 'react-native';
+import { useEffect, useRef, useState } from 'react';
+import { Pressable, TextInput, View, Text, StyleSheet } from 'react-native';
 import EventSource, { EventSourceListener } from 'react-native-sse';
 import myAlert from './myAlert';
-import { AncheckInterface } from '@/NativeModules/Anchek';
 import { Storage } from 'expo-sqlite/kv-store';
+import { getSignAble, qrSign } from '@/store/accounts_zustand';
 
 const description = {
   [accountState.plain]: '连接服务器',
@@ -30,9 +22,6 @@ type qrRetT = {
 const ServerUrlKey = 'ServerUrlKey651321';
 
 export default function SseBar() {
-  const as = useContext(AccountsCtx);
-  const Ancheck: AncheckInterface = NativeModules.Ancheck;
-
   const [url, setUrl] = useState('');
   const esRef = useRef<EventSource<myEvents>>();
   const timerId = useRef<any>();
@@ -92,36 +81,9 @@ export default function SseBar() {
         return;
       }
 
-      as.accountStore
-        .filter(
-          (info) =>
-            info.isEnabled &&
-            (info.state === accountState.logged ||
-              info.state === accountState.checkFailed),
-        )
-        .forEach((info) => {
-          console.log(data);
-          as.updateState(info.userId, accountState.pending);
-          Ancheck.get(info.userId, data.data, {})
-            .then((v) => {
-              if (v.body.includes('Sign in successfully')) {
-                as.updateState(info.userId, accountState.checkSuccess);
-              } else {
-                as.updateState(info.userId, accountState.checkFailed);
-                myAlert('签到返回值错误', JSON.stringify(v));
-              }
-            })
-            .catch((e) => {
-              as.updateState(info.userId, accountState.checkFailed);
-              myAlert(
-                '发起请求错误,请检查是否已登录',
-                e && e.message ? e.message : JSON.stringify(e),
-              );
-            })
-            .then(() => {
-              es.close();
-            });
-        });
+      Object.values(getSignAble()).forEach((info) => {
+        qrSign(info.userId, data.data);
+      });
     });
   };
 

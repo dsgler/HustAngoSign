@@ -14,6 +14,7 @@ import {
   FirstSignInListBody,
   FirstSignInListUrl,
   getPosiSignInUrl,
+  getQrSignInUrl,
 } from '@/constants/urls';
 import { useLog } from './log_zustand';
 import { otherIds } from '@/types/otherIds';
@@ -23,6 +24,7 @@ import { getPosition } from '@/utils/getPosition';
 import { create } from 'zustand';
 import { produce } from 'immer';
 import { Ancheck } from '@/NativeModules/Ancheck';
+import myAlert from '@/components/myAlert';
 
 export const UserNotExist = Error('此用户不存在');
 const AccountStoreKey = '_MyAccountStore';
@@ -62,29 +64,34 @@ type AccountStoreActionType = {
   ) => Promise<NetRet>;
 };
 
+type AccountStoreUnionType = {
+  accountObj: AccountStoreStateType['accountObj'];
+  accountArr: AccountStoreStateType['accountArr'];
+};
+
 export const useAccountStore = create<
   AccountStoreStateType & AccountStoreActionType
 >((set, get) => {
   const addLog = useLog((state) => state.addLog);
 
   let accountObj: AccountStoreStateType['accountObj'] = {};
+  let accountArr: AccountStoreStateType['accountArr'] = [];
   if (Platform.OS === 'android' || Platform.OS === 'ios') {
     Storage.getItemAsync(AccountStoreKey).then((r) => {
       if (r) {
         console.log('load', r);
-        const e: AccountStoreStateType['accountObj'] = JSON.parse(r);
+        const e: AccountStoreUnionType = JSON.parse(r);
 
         // 将状态置空
-        for (const key in e) {
-          e[key].state = accountState.plain;
+        for (const key in e.accountObj) {
+          e.accountObj[key].state = accountState.plain;
         }
 
-        accountObj = e;
+        accountObj = e.accountObj;
+        accountArr = e.accountArr;
       }
     });
   }
-
-  const accountArr = Object.keys(accountObj);
 
   // TODO: init
 
@@ -92,8 +99,13 @@ export const useAccountStore = create<
     if (Platform.OS === 'android' || Platform.OS === 'ios') {
       if (get().accountArr.length === 0) return;
 
-      addLog(['存储', get().accountObj.toString()]);
-      Storage.setItemSync(AccountStoreKey, JSON.stringify(get().accountObj));
+      const u: AccountStoreUnionType = {
+        accountObj: get().accountObj,
+        accountArr: get().accountArr,
+      };
+
+      addLog(['存储', u.toString()]);
+      Storage.setItemSync(AccountStoreKey, JSON.stringify(u));
     }
   };
 
@@ -245,9 +257,9 @@ export const useAccountStore = create<
   };
 });
 
-export const getSignAble = (
-  accountObj: AccountStoreStateType['accountObj'],
-): AccountStoreStateType['accountObj'] => {
+export const getSignAble = (): AccountStoreStateType['accountObj'] => {
+  const accountObj: AccountStoreStateType['accountObj'] =
+    useAccountStore.getState().accountObj;
   return Object.fromEntries(
     Object.entries(accountObj).filter(
       ([_k, info]) =>
@@ -256,6 +268,57 @@ export const getSignAble = (
           info.state === accountState.checkFailed),
     ),
   );
+};
+
+export const qrSign = (userId: string, RawUrl: string) => {
+  const addLog = useLog.getState().addLog;
+  const as = useAccountStore.getState();
+
+  as.updateUserState(userId, accountState.pending);
+
+  let QrSignInUrl: string;
+  try {
+    QrSignInUrl = getQrSignInUrl(RawUrl);
+  } catch (e) {
+    myAlert(
+      '链接错误',
+      (e instanceof Error ? e.message : JSON.stringify(e)) + ':\n' + RawUrl,
+    );
+    addLog(
+      [
+        '链接错误',
+        (e instanceof Error ? e.message : JSON.stringify(e)) + ':\n',
+        RawUrl,
+      ],
+      userId,
+    );
+    return;
+  }
+
+  as.Get(userId, QrSignInUrl, {})
+    .then((v) => {
+      if (getIsSignInSuccess(v.body)) {
+        as.updateUserState(userId, accountState.checkSuccess);
+      } else {
+        as.updateUserState(userId, accountState.checkFailed);
+        myAlert('签到返回值错误', JSON.stringify(v));
+        addLog(['签到返回值错误', JSON.stringify(v)], userId);
+      }
+    })
+    .catch((e) => {
+      as.updateUserState(userId, accountState.checkFailed);
+      myAlert(
+        '发起请求错误,请检查是否已登录',
+        e && e.message ? e.message : JSON.stringify(e),
+      );
+      addLog(
+        [
+          '发起请求错误,请检查是否已登录',
+          e && e.message ? e.message : JSON.stringify(e),
+        ],
+        userId,
+      );
+    });
 };
 
 const gestureSign = async (activeId: string, userId: string) => {
