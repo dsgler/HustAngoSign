@@ -1,7 +1,7 @@
 import myAlert from '@/components/myAlert';
-import { AccountsCtx } from '@/contexts/accounts';
+import { useAccountStore } from '@/store/accounts_zustand';
 import { router, useLocalSearchParams } from 'expo-router';
-import { useContext, useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Pressable, StyleSheet, TextInput, Text } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { z } from 'zod';
@@ -12,19 +12,21 @@ const passwdScheme = z.string().min(6, '长度错误');
 export default function AddOrEditUser() {
   const { userId } = useLocalSearchParams<{ userId?: string }>();
   const isAdd = useRef(!userId);
-  const as = useContext(AccountsCtx);
+
+  const addUser = useAccountStore((state) => state.addUser);
+  const editUser = useAccountStore((state) => state.editUser);
 
   const [UserId, setUserId] = useState(userId ?? '');
   const [Passwd, setPasswd] = useState('');
 
   useEffect(() => {
     if (!isAdd.current) {
-      if (!userId || !as.getUser(userId)) {
+      if (!userId || !useAccountStore.getState().accountObj[userId]) {
         myAlert('找不到用户', '将变为添加模式');
         isAdd.current = true;
       }
     }
-  }, [as, userId]);
+  }, [userId]);
 
   return (
     <SafeAreaView style={{ flex: 1, paddingHorizontal: 20, paddingTop: 20 }}>
@@ -33,6 +35,7 @@ export default function AddOrEditUser() {
         value={UserId}
         onChangeText={setUserId}
         placeholder="请输入用户ID"
+        editable={isAdd.current}
       />
       <TextInput
         style={styles.TextInput}
@@ -53,9 +56,9 @@ export default function AddOrEditUser() {
           }
 
           if (isAdd.current) {
-            as.addUser(u, p);
+            addUser(u, p);
           } else {
-            as.editUser(userId!, UserId, Passwd);
+            editUser(userId!, Passwd);
           }
           router.back();
         }}

@@ -8,13 +8,13 @@ export default function Logs() {
   const log = useLog((state) => state.logs);
 
   return (
-    <SafeAreaView style={{ flex: 1 }}>
+    <SafeAreaView style={{ flex: 1, paddingHorizontal: 20 }}>
       <FlatList
         data={log}
         renderItem={({ item }) => (
           <Pressable
             onPress={() => {
-              Clipboard.setStringAsync(item.toString()).then(() => {
+              Clipboard.setStringAsync(JSON.stringify(item)).then(() => {
                 ToastAndroid.show('复制成功', ToastAndroid.SHORT);
               });
             }}

@@ -6,6 +6,8 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 
 export default function Index() {
   const accountArr = useAccountStore((state) => state.accountArr);
+  const accountObj = useAccountStore((state) => state.accountObj);
+  console.log(accountArr, accountObj);
 
   console.log('render');
 

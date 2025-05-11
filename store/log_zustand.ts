@@ -27,5 +27,5 @@ export const useLog = create<LogStateType & LogActionType>((set) => ({
 }));
 
 export function formatLog(logRow: LogRowType) {
-  return `[${logRow.time}] [${logRow.tags?.join('] [')}] ${typeof logRow.messages === 'string' ? logRow.messages : logRow.messages.join(' ')}`;
+  return `[${logRow.time}] [${logRow.tags?.join('] [') ?? ''}] ${typeof logRow.messages === 'string' ? logRow.messages : logRow.messages.join(' ')}`;
 }

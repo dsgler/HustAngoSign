@@ -72,26 +72,30 @@ type AccountStoreUnionType = {
 export const useAccountStore = create<
   AccountStoreStateType & AccountStoreActionType
 >((set, get) => {
-  const addLog = useLog((state) => state.addLog);
-
   let accountObj: AccountStoreStateType['accountObj'] = {};
   let accountArr: AccountStoreStateType['accountArr'] = [];
   if (Platform.OS === 'android' || Platform.OS === 'ios') {
-    Storage.getItemAsync(AccountStoreKey).then((r) => {
-      if (r) {
-        console.log('load', r);
-        const e: AccountStoreUnionType = JSON.parse(r);
+    const r = Storage.getItemSync(AccountStoreKey);
+    if (r) {
+      console.log('load', r);
+      const e: AccountStoreUnionType = JSON.parse(r);
 
-        // 将状态置空
-        for (const key in e.accountObj) {
-          e.accountObj[key].state = accountState.plain;
-        }
-
-        accountObj = e.accountObj;
-        accountArr = e.accountArr;
+      // 将状态置空
+      for (const key in e.accountObj) {
+        e.accountObj[key].state = accountState.plain;
       }
-    });
+
+      accountObj = e.accountObj;
+      accountArr = e.accountArr;
+    }
   }
+
+  if (accountArr.length !== Object.keys(accountObj).length) {
+    console.log('用户数据错误', '长度不等长，尝试修复');
+    accountArr = Object.keys(accountObj);
+  }
+
+  console.log(accountObj, accountArr);
 
   // TODO: init
 
@@ -104,7 +108,6 @@ export const useAccountStore = create<
         accountArr: get().accountArr,
       };
 
-      addLog(['存储', u.toString()]);
       Storage.setItemSync(AccountStoreKey, JSON.stringify(u));
     }
   };
@@ -155,7 +158,7 @@ export const useAccountStore = create<
     set((state) => ({
       accountObj: {
         ...state.accountObj,
-        userId: {
+        [userId]: {
           isEnabled: true,
           passwd,
           state: accountState.plain,
@@ -334,6 +337,8 @@ const gestureSign = async (activeId: string, userId: string) => {
   if (!code) {
     throw Error('未找到密码' + JSON.stringify(ret));
   }
+
+  useLog.getState().addLog('手势签到code：' + code, 'gestureSign code');
 
   ret = await get(userId, getGestureSignInUrl(activeId, code));
   if (!getIsSignInSuccess(ret.body)) {

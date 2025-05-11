@@ -11,27 +11,18 @@ import { useLog } from '@/store/log_zustand';
 const IconSize = 20;
 
 function AccountCard({ userId }: { userId: string }) {
-  const as = useAccountStore(
-    ({
-      deleteUser,
-      enableFunc,
-      updateUserState,
-      loginFunc,
-      Get,
-      Post,
-      checkLogFunc,
-      editFunc,
-    }) => ({
-      deleteUser,
-      enableFunc,
-      updateUserState,
-      loginFunc,
-      Get,
-      Post,
-      checkLogFunc,
-      editFunc,
-    }),
-  );
+  console.log(userId, 777);
+
+  const as = {
+    deleteUser: useAccountStore((state) => state.deleteUser),
+    enableFunc: useAccountStore((state) => state.enableFunc),
+    updateUserState: useAccountStore((state) => state.updateUserState),
+    loginFunc: useAccountStore((state) => state.loginFunc),
+    Get: useAccountStore((state) => state.Get),
+    Post: useAccountStore((state) => state.Post),
+    checkLogFunc: useAccountStore((state) => state.checkLogFunc),
+    editFunc: useAccountStore((state) => state.editFunc),
+  };
   const addLog = useLog((state) => state.addLog);
   const info = useAccountStore((state) => state.accountObj[userId]);
   // console.log(info);
