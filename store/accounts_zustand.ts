@@ -298,6 +298,8 @@ export const qrSign = (userId: string, RawUrl: string) => {
     return;
   }
 
+  addLog('签到链接:' + QrSignInUrl, 'QrSignInUrl');
+
   as.Get(userId, QrSignInUrl, {})
     .then((v) => {
       if (getIsSignInSuccess(v.body)) {
@@ -356,6 +358,9 @@ const posiSign = async (activeId: string, userId: string) => {
 
   const posi = getPosition(ret.body);
 
+  useLog
+    .getState()
+    .addLog('位置签到code：' + JSON.stringify(posi), 'posiSign posi');
   ret = await get(
     userId,
     getPosiSignInUrl(

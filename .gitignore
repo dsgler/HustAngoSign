@@ -36,6 +36,26 @@ yarn-error.*
 *.tsbuildinfo
 
 app-example
-android/
 .idea/
 .vscode/
+
+
+# 忽略 android 文件夹
+android/**/*
+
+# 但保留中间路径的各级目录，逐层开放
+!android/app/
+!android/app/src/
+!android/app/src/main/
+!android/app/src/main/AndroidManifest.xml
+
+# 保留 angotest 目录及其内容
+!android/app/src/main/java/
+!android/app/src/main/java/com/
+!android/app/src/main/java/com/dsgler/
+!android/app/src/main/java/com/dsgler/angotest/
+!android/app/src/main/java/com/dsgler/angotest/**
+
+# 保留 libs 目录及其内容
+!android/app/libs/
+!android/app/libs/**

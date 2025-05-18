@@ -1,50 +1,40 @@
-# Welcome to your Expo app 👋
+# angotest
 
-This is an [Expo](https://expo.dev) project created with [`create-expo-app`](https://www.npmjs.com/package/create-expo-app).
+名字随便取的，作用是 解决hust超星（企业微信） 签到  
+借鉴了很多前人的代码，github上应该能搜到很多
 
-## Get started
 
-1. Install dependencies
+技术上使用 `react native` 加 `go` （作为发起请求的工具，来自我的另一个仓库）
 
-   ```bash
-   npm install
-   ```
+由于框架和`go`的问题，项目不太好编译
 
-2. Start the app
+因为本人没有 mac 所以实际也不能跨端
 
-   ```bash
-    npx expo start
-   ```
+目前版本，二维码签到需要人代扫，手势签到 和 位置签到 由于超星的缺陷可以直接秒杀（截至2025.5.18），其他的还没测试。
 
-In the output, you'll find options to open the app in a
+本人的账号最近被风控了，准备换个登录方式，用华科自己的网页登录，可能可以解决问题。小心使用。
 
-- [development build](https://docs.expo.dev/develop/development-builds/introduction/)
-- [Android emulator](https://docs.expo.dev/workflow/android-studio-emulator/)
-- [iOS simulator](https://docs.expo.dev/workflow/ios-simulator/)
-- [Expo Go](https://expo.dev/go), a limited sandbox for trying out app development with Expo
-
-You can start developing by editing the files inside the **app** directory. This project uses [file-based routing](https://docs.expo.dev/router/introduction).
-
-## Get a fresh project
-
-When you're ready, run:
-
-```bash
-npm run reset-project
+## 使用教程
+1. 点击`添加用户`
+2. 输入 `用户名` 和 `密码` ，点提交
+3. 点登录，目前还没处理错误，自行区分是密码错误还是网络问题，还是被风控了
+```js
+export const accountState = {
+  plain: 'plain', // 无状态
+  logged: 'logged',  // 已经登录
+  logFailed: 'logFailed',  // 登录失败
+  pending: 'pending',  // 请求中
+  checkSuccess: 'checkSuccess',  // 签到成功
+  checkFailed: 'checkFailed',  // 签到失败
+};
 ```
+4. 
+- 二维码签到：直接切换到 `scan` 页面直接扫码
+- 其他签到：点击自动，直接签好
 
-This command will move the starter code to the **app-example** directory and create a blank **app** directory where you can start developing.
-
-## Learn more
-
-To learn more about developing your project with Expo, look at the following resources:
-
-- [Expo documentation](https://docs.expo.dev/): Learn fundamentals, or go into advanced topics with our [guides](https://docs.expo.dev/guides).
-- [Learn Expo tutorial](https://docs.expo.dev/tutorial/introduction/): Follow a step-by-step tutorial where you'll create a project that runs on Android, iOS, and the web.
-
-## Join the community
-
-Join our community of developers creating universal apps.
-
-- [Expo on GitHub](https://github.com/expo/expo): View our open source platform and contribute.
-- [Discord community](https://chat.expo.dev): Chat with Expo users and ask questions.
+其他说明：
+- 最左边的勾：是否签到。事实上，只有登录成功了才会签到
+- 检测：检测登录状态
+- 连接服务器：WIP，事实上可用，需要一个服务器，使用`SSE`每10s以内发 `ping` event，有二维码内容时不断发送 `qr` event，内容为`{data:string}`，里面存放二维码的链接，因为过于复杂本人懒得搞
+- 长按可以删除用户
+- logs里可以查看日志，长按可以复制
