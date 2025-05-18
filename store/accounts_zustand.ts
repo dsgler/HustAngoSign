@@ -15,6 +15,9 @@ import {
   FirstSignInListUrl,
   getPosiSignInUrl,
   getQrSignInUrl,
+  passUrl,
+  smartLoginUrl,
+  smartBaseUrl,
 } from '@/constants/urls';
 import { useLog } from './log_zustand';
 import { otherIds } from '@/types/otherIds';
@@ -26,6 +29,11 @@ import { produce } from 'immer';
 import { Ancheck } from '@/NativeModules/Ancheck';
 import myAlert from '@/components/myAlert';
 
+import CookieManager from '@react-native-cookies/cookies';
+import { cookielock } from '@/locks/cookielock';
+import { wechatHeader } from '@/constants/header';
+import { loadCookie, storeCookie } from './cookieStore';
+
 export const UserNotExist = Error('此用户不存在');
 const AccountStoreKey = '_MyAccountStore';
 
@@ -33,6 +41,7 @@ export type AccountStoreItem = {
   userId: string;
   userName: string;
   passwd: string;
+  CASTGC: string;
   state: string;
   isEnabled: boolean;
 };
@@ -52,15 +61,21 @@ type AccountStoreActionType = {
     UserState: string,
     userName?: string,
   ) => void;
-  addUser: (userId: string, passwd: string) => void;
-  editUser: (userId: string, passwd: string) => void;
+  addUser: (userId: string, passwd: string, CASTGC: string) => void;
+  editUser: (userId: string, passwd: string, CASTGC: string) => void;
   deleteUser: (userId: string) => void;
-  Get: (userId: string, url: string, headers?: headersType) => Promise<NetRet>;
+  Get: (
+    userId: string,
+    url: string,
+    headers?: headersType,
+    shouldSave?: boolean,
+  ) => Promise<NetRet>;
   Post: (
     userId: string,
     url: string,
     inbody: string,
     headers?: headersType,
+    shouldSave?: boolean,
   ) => Promise<NetRet>;
 };
 
@@ -94,10 +109,6 @@ export const useAccountStore = create<
     console.log('用户数据错误', '长度不等长，尝试修复');
     accountArr = Object.keys(accountObj);
   }
-
-  console.log(accountObj, accountArr);
-
-  // TODO: init
 
   const save = () => {
     if (Platform.OS === 'android' || Platform.OS === 'ios') {
@@ -133,9 +144,54 @@ export const useAccountStore = create<
   const checkLogFunc: AccountStoreActionType['checkLogFunc'] = async (
     userId: string,
   ) => {
-    if (!get().accountObj[userId]) throw UserNotExist;
+    const u = get().accountObj[userId];
+    if (!u) throw UserNotExist;
 
-    return Ancheck.check(userId);
+    if (get().accountObj[userId].passwd) {
+      if (!get().accountObj[userId]) throw UserNotExist;
+
+      return Ancheck.check(userId);
+    } else {
+      if (!u.CASTGC) {
+        throw Error('passwd和CASTGC均为空，无法登录');
+      }
+
+      get().updateUserState(userId, accountState.pending);
+
+      await get().Get(userId, smartLoginUrl, undefined, true);
+      let req = get().Get(userId, smartBaseUrl);
+      const body = (await req).body;
+
+      const re = /<p class="user-name">(.+)<\/p>/;
+      let name: string;
+      try {
+        name = body.match(re)![1];
+      } catch {
+        get().updateUserState(userId, accountState.logFailed);
+        throw Error(body);
+      }
+      get().updateUserState(userId, accountState.logged);
+
+      console.log(await CookieManager.get(passUrl));
+      console.log(await CookieManager.get(smartBaseUrl));
+
+      return name;
+    }
+  };
+
+  const setCas = (CASTGC: string) => {
+    console.log('set cas :', CASTGC);
+    return CookieManager.set(passUrl, {
+      name: 'CASTGC',
+      value: CASTGC,
+      path: '/cas',
+      domain: 'pass.hust.edu.cn',
+    });
+  };
+
+  const clearCookie = () => {
+    console.log('clear cookie');
+    return CookieManager.clearAll();
   };
 
   const loginFunc: AccountStoreActionType['loginFunc'] = async (
@@ -144,7 +200,16 @@ export const useAccountStore = create<
     const u = get().accountObj[userId];
     if (!u) throw UserNotExist;
 
-    return Ancheck.login(u.userId, u.passwd);
+    if (u.passwd) {
+      return Ancheck.login(u.userId, u.passwd);
+    } else {
+      if (!u.CASTGC) {
+        throw Error('passwd和CASTGC均为空，无法登录');
+      }
+
+      // TODO 网页登录
+      throw Error('CASTGC模式请直接检测');
+    }
   };
 
   const editFunc: AccountStoreActionType['editFunc'] = (userId: string) => {
@@ -154,6 +219,7 @@ export const useAccountStore = create<
   const addUser: AccountStoreActionType['addUser'] = (
     userId: string,
     passwd: string,
+    CASTGC: string,
   ) => {
     set((state) => ({
       accountObj: {
@@ -164,6 +230,7 @@ export const useAccountStore = create<
           state: accountState.plain,
           userId,
           userName: '',
+          CASTGC,
         },
       },
       accountArr: [...state.accountArr, userId],
@@ -194,6 +261,7 @@ export const useAccountStore = create<
   const editUser: AccountStoreActionType['editUser'] = (
     userId: string,
     passwd: string,
+    CASTGC: string,
   ) => {
     set((state) => {
       if (!state.accountObj[userId]) throw UserNotExist;
@@ -201,6 +269,7 @@ export const useAccountStore = create<
       return {
         accountObj: produce(state.accountObj, (accountObj) => {
           accountObj[userId].passwd = passwd;
+          accountObj[userId].CASTGC = CASTGC;
         }),
       };
     });
@@ -227,10 +296,35 @@ export const useAccountStore = create<
     userId: string,
     url: string,
     headers?: headersType,
+    shouldSave?: boolean,
   ) => {
-    if (!get().accountObj[userId]) throw UserNotExist;
+    const u = get().accountObj[userId];
+    if (!u) throw UserNotExist;
 
-    return Ancheck.get(userId, url, headers ?? {});
+    if (u.passwd) {
+      return Ancheck.get(userId, url, headers ?? wechatHeader);
+    } else {
+      const release = await cookielock.acquire();
+      let req: Promise<Response>;
+      try {
+        await clearCookie();
+        await setCas(u.CASTGC);
+        await loadCookie(userId);
+        req = fetch(url, { headers });
+        if (shouldSave) {
+          const resp = await req;
+
+          await storeCookie(userId);
+
+          return { statusCode: resp.status, body: await resp.text() };
+        }
+      } finally {
+        release();
+      }
+      const resp = await req;
+
+      return { statusCode: resp.status, body: await resp.text() };
+    }
   };
 
   const Post: AccountStoreActionType['Post'] = async (
@@ -238,10 +332,42 @@ export const useAccountStore = create<
     url: string,
     inbody: string,
     headers?: headersType,
+    shouldSave?: boolean,
   ) => {
-    if (!get().accountObj[userId]) throw UserNotExist;
+    const u = get().accountObj[userId];
+    if (!u) throw UserNotExist;
 
-    return Ancheck.post(userId, url, inbody, headers ?? {});
+    if (u.passwd) {
+      return Ancheck.post(
+        userId,
+        url,
+        inbody,
+        headers ? { ...wechatHeader, ...headers } : wechatHeader,
+      );
+    } else {
+      const release = await cookielock.acquire();
+      let req: Promise<Response>;
+      try {
+        await clearCookie();
+        await setCas(u.CASTGC);
+        await loadCookie(userId);
+        req = fetch(url, { headers, body: inbody, method: 'POST' });
+
+        if (shouldSave) {
+          const resp = await req;
+
+          await storeCookie(userId);
+
+          return { statusCode: resp.status, body: await resp.text() };
+        }
+      } finally {
+        release();
+      }
+      const resp = await req;
+      console.log(resp);
+
+      return { statusCode: resp.status, body: await resp.text() };
+    }
   };
 
   return {
@@ -382,6 +508,7 @@ export const autoSign = async (userId: string) => {
   const ret = await post(userId, FirstSignInListUrl, FirstSignInListBody, {
     'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
   });
+  console.log(ret);
   const list: SignInListTypes.Response = JSON.parse(ret.body);
   if (list?.result !== 1 || !Array.isArray(list?.data?.array)) {
     throw Error('获取签到列表返回错误\n' + JSON.stringify(ret));

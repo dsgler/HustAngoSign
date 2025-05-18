@@ -16,7 +16,7 @@ export interface AncheckInterface {
 
 export type NetRet = {
   body: string;
-  statusCode: string;
+  statusCode: string | number;
 };
 
 export type headersType = { [key: string]: string };

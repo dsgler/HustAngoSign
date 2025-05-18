@@ -7,7 +7,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { z } from 'zod';
 
 const userIdScheme = z.string().length(10, '长度错误');
-const passwdScheme = z.string().min(6, '长度错误');
+// const passwdScheme = z.string().min(6, '长度错误');
 
 export default function AddOrEditUser() {
   const { userId } = useLocalSearchParams<{ userId?: string }>();
@@ -18,6 +18,7 @@ export default function AddOrEditUser() {
 
   const [UserId, setUserId] = useState(userId ?? '');
   const [Passwd, setPasswd] = useState('');
+  const [CASTGC, setCASTGC] = useState('');
 
   useEffect(() => {
     if (!isAdd.current) {
@@ -43,22 +44,28 @@ export default function AddOrEditUser() {
         onChangeText={setPasswd}
         placeholder="请输入密码"
       />
+      <TextInput
+        style={styles.TextInput}
+        value={CASTGC}
+        onChangeText={setCASTGC}
+        placeholder="请输入CASTGC"
+      />
       <Pressable
         onPress={() => {
           let u: string;
-          let p: string;
+          // let p: string;
           try {
             u = userIdScheme.parse(UserId);
-            p = passwdScheme.parse(Passwd);
+            // p = passwdScheme.parse(Passwd);
           } catch (e) {
             myAlert('参数错误', e instanceof Error ? e.message : '');
             return;
           }
 
           if (isAdd.current) {
-            addUser(u, p);
+            addUser(u, Passwd, CASTGC);
           } else {
-            editUser(userId!, Passwd);
+            editUser(userId!, Passwd, CASTGC);
           }
           router.back();
         }}

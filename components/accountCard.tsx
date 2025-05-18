@@ -11,8 +11,6 @@ import { useLog } from '@/store/log_zustand';
 const IconSize = 20;
 
 function AccountCard({ userId }: { userId: string }) {
-  console.log(userId, 777);
-
   const as = {
     deleteUser: useAccountStore((state) => state.deleteUser),
     enableFunc: useAccountStore((state) => state.enableFunc),

@@ -37,3 +37,12 @@ export function getPosiSignInUrl(
 ) {
   return `https://smartcourse.hust.edu.cn/mobilewx-smartcourse/widget/weixin/sign/stuSignController/signIn?activeId=${activeId}&title=${encodeURIComponent(title)}&longitude=${longitude}&latitude=${latitude}&wxsn=&validate=`;
 }
+
+export const passUrl = 'https://pass.hust.edu.cn/';
+export const casUrl = 'https://pass.hust.edu.cn/cas/';
+export const oneUrl =
+  'https://one.hust.edu.cn/dcp/forward.action?path=/portal/portal&p=home';
+
+export const smartLoginUrl = `https://smartcourse.hust.edu.cn/mh-smartcourse/login?url=&referer=https%3a%2f%2fsmartcourse.hust.edu.cn%2fi-smartcourse%2fbase`;
+export const smartBaseUrl = `https://smartcourse.hust.edu.cn/i-smartcourse/base`;
+export const smartUrl = `https://smartcourse.hust.edu.cn/`;
