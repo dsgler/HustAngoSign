@@ -34,18 +34,11 @@ export default function WebLogin() {
       editUser(userId, passwd, cookies.CASTGC.value);
       await storeCookie(userId);
       router.dismissTo('/(tabs)');
+      useAccountStore.getState().checkLogFunc(userId);
     }
 
     console.log('Cookies from login:', cookies);
   };
-
-  //   CookieManager.set(logurl, {
-  //     name: "CASTGC",
-  //     value:
-  //       "TGT-U202417354-156954-JKUnRa7TeUoJOZeeMQO05PPEqwBcZWWqXihMP6NlSmZC55SxQf-cas",
-  //     path: "/cas",
-  //     domain: "pass.hust.edu.cn",
-  //   });
 
   return (
     <SafeAreaView style={{ flex: 1 }}>

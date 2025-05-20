@@ -4,7 +4,7 @@ import CookieManager, { Cookies } from '@react-native-cookies/cookies';
 type userIdType = string;
 
 type cookieStoreType = {
-  [key: userIdType]: cookieStoreItemType;
+  [key: userIdType]: cookieStoreItemType | undefined;
 };
 
 type cookieStoreItemType = {
@@ -39,4 +39,9 @@ export const loadCookie = async (userId: userIdType) => {
   }
 };
 
+export const clearCookie = async (userId: userIdType) => {
+  cookieStore[userId] = undefined;
+};
+
+// 准备用于优化，未实装
 export let lastUserId = '';

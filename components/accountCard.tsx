@@ -6,6 +6,7 @@ import { MyCheckBox } from './myCheckBox';
 import myAlert from './myAlert';
 import React from 'react';
 import { useLog } from '@/store/log_zustand';
+import { clearCookie } from '@/store/cookieStore';
 
 const IconSize = 20;
 
@@ -94,6 +95,15 @@ function AccountCard({ userId }: { userId: string }) {
                 as.updateUserState(info.userId, accountState.logFailed);
               });
           }}
+          onLongPress={() => {
+            myAlert(
+              '确定要清楚储存的 cookie 吗？',
+              '可以解决登录过期问题',
+              () => {
+                clearCookie(userId);
+              },
+            );
+          }}
         />
         <IconCol
           name="rocket1"
@@ -134,10 +144,12 @@ const IconCol = ({
   name,
   description,
   onPress,
+  onLongPress,
 }: {
   name: keyof typeof AntDesignIcon.glyphMap;
   description: string;
   onPress?: ((event: GestureResponderEvent) => void) | undefined;
+  onLongPress?: ((event: GestureResponderEvent) => void) | undefined;
 }) => {
   return (
     <View style={{ alignItems: 'center' }}>
@@ -145,6 +157,7 @@ const IconCol = ({
         name={name}
         size={IconSize}
         onPress={onPress}
+        onLongPress={onLongPress}
         style={{
           justifyContent: 'center',
           alignItems: 'center',
