@@ -4,7 +4,6 @@ import { View, Text, GestureResponderEvent, Pressable } from 'react-native';
 import AntDesignIcon from '@expo/vector-icons/AntDesign';
 import { MyCheckBox } from './myCheckBox';
 import myAlert from './myAlert';
-import { smartcoursePrelogin } from '@/constants/urls';
 import React from 'react';
 import { useLog } from '@/store/log_zustand';
 
@@ -63,25 +62,13 @@ function AccountCard({ userId }: { userId: string }) {
           description="登录"
           onPress={() => {
             as.updateUserState(info.userId, accountState.pending);
-            as.loginFunc(info.userId)
-              .then((v) => {
-                if (v) {
-                  as.updateUserState(info.userId, accountState.logged);
-                } else {
-                  throw Error('检测登录失败');
-                }
-              })
-              .then(() => {
-                return as.Get(info.userId, smartcoursePrelogin);
-              })
-              .catch((e) => {
-                myAlert('登录错误', e instanceof Error ? e.message : '');
-                addLog(
-                  ['登录错误', e instanceof Error ? e.message : ''],
-                  info.userId,
-                );
-                as.updateUserState(info.userId, accountState.logFailed);
-              });
+            as.loginFunc(info.userId).then((v) => {
+              if (v) {
+                as.updateUserState(info.userId, accountState.logged);
+              } else if (v === false) {
+                throw Error('检测登录失败');
+              }
+            });
           }}
         />
         <IconCol

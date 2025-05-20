@@ -1,6 +1,3 @@
-export const smartcoursePrelogin =
-  'https://smartcourse.hust.edu.cn/mobilewx-smartcourse/widget/weixin/sign/stuSignController/signIn';
-
 export function getQrSignInUrl(QrUrl: string) {
   let enc, activeId: string;
 

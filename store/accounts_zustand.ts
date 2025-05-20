@@ -37,6 +37,8 @@ import { loadCookie, storeCookie } from './cookieStore';
 export const UserNotExist = Error('此用户不存在');
 const AccountStoreKey = '_MyAccountStore';
 
+const isUseNativeLog = false;
+
 export type AccountStoreItem = {
   userId: string;
   userName: string;
@@ -147,7 +149,7 @@ export const useAccountStore = create<
     const u = get().accountObj[userId];
     if (!u) throw UserNotExist;
 
-    if (get().accountObj[userId].passwd) {
+    if (isUseNativeLog) {
       if (!get().accountObj[userId]) throw UserNotExist;
 
       return Ancheck.check(userId);
@@ -200,15 +202,15 @@ export const useAccountStore = create<
     const u = get().accountObj[userId];
     if (!u) throw UserNotExist;
 
-    if (u.passwd) {
+    if (isUseNativeLog) {
       return Ancheck.login(u.userId, u.passwd);
     } else {
-      if (!u.CASTGC) {
-        throw Error('passwd和CASTGC均为空，无法登录');
-      }
-
       // TODO 网页登录
-      throw Error('CASTGC模式请直接检测');
+      await clearCookie();
+      router.push({
+        pathname: '/webLogin',
+        params: { userId: u.userId, passwd: u.passwd },
+      });
     }
   };
 
@@ -301,7 +303,7 @@ export const useAccountStore = create<
     const u = get().accountObj[userId];
     if (!u) throw UserNotExist;
 
-    if (u.passwd) {
+    if (isUseNativeLog) {
       return Ancheck.get(userId, url, headers ?? wechatHeader);
     } else {
       const release = await cookielock.acquire();
@@ -337,7 +339,7 @@ export const useAccountStore = create<
     const u = get().accountObj[userId];
     if (!u) throw UserNotExist;
 
-    if (u.passwd) {
+    if (isUseNativeLog) {
       return Ancheck.post(
         userId,
         url,
@@ -364,7 +366,6 @@ export const useAccountStore = create<
         release();
       }
       const resp = await req;
-      console.log(resp);
 
       return { statusCode: resp.status, body: await resp.text() };
     }
