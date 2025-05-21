@@ -1,5 +1,6 @@
 import { casUrl, passUrl, smartUrl } from '@/constants/urls';
 import CookieManager, { Cookies } from '@react-native-cookies/cookies';
+import { useLog } from './log_zustand';
 
 type userIdType = string;
 
@@ -16,6 +17,8 @@ type cookieStoreItemType = {
 
 export const cookieStore: cookieStoreType = {};
 
+const addLog = useLog.getState().addLog;
+
 export const storeCookie = async (userId: userIdType) => {
   cookieStore[userId] = {
     [passUrl]: await CookieManager.get(passUrl),
@@ -23,12 +26,14 @@ export const storeCookie = async (userId: userIdType) => {
     [smartUrl]: await CookieManager.get(smartUrl),
   };
   console.log('store', cookieStore[userId]);
+  addLog('storeCookie', userId);
 };
 
 export const loadCookie = async (userId: userIdType) => {
   if (!cookieStore[userId]) return false;
 
   console.log('load cookie');
+  addLog('loadCookie', userId);
 
   for (const [k, v] of Object.entries(cookieStore[userId])) {
     if (v) {

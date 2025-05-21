@@ -89,6 +89,8 @@ type AccountStoreUnionType = {
 export const useAccountStore = create<
   AccountStoreStateType & AccountStoreActionType
 >((set, get) => {
+  const addLog = useLog.getState().addLog;
+
   let accountObj: AccountStoreStateType['accountObj'] = {};
   let accountArr: AccountStoreStateType['accountArr'] = [];
   if (Platform.OS === 'android' || Platform.OS === 'ios') {
@@ -97,13 +99,17 @@ export const useAccountStore = create<
       console.log('load', r);
       const e: AccountStoreUnionType = JSON.parse(r);
 
-      // 将状态置空
-      for (const key in e.accountObj) {
-        e.accountObj[key].state = accountState.plain;
-      }
+      if ('accountObj' in e && 'accountArr' in e) {
+        // 将状态置空
+        for (const key in e.accountObj) {
+          e.accountObj[key].state = accountState.plain;
+        }
 
-      accountObj = e.accountObj;
-      accountArr = e.accountArr;
+        accountObj = e.accountObj;
+        accountArr = e.accountArr;
+      } else {
+        addLog('读取数据失败，保持空数据，可能因为旧版本升级类型改变');
+      }
     }
   }
 
@@ -183,6 +189,7 @@ export const useAccountStore = create<
 
   const setCas = (CASTGC: string) => {
     console.log('set cas :', CASTGC);
+    addLog(['set cas :', CASTGC], 'setCas');
     return CookieManager.set(passUrl, {
       name: 'CASTGC',
       value: CASTGC,
@@ -267,6 +274,10 @@ export const useAccountStore = create<
   ) => {
     set((state) => {
       if (!state.accountObj[userId]) throw UserNotExist;
+
+      if (CASTGC) {
+        addLog(CASTGC, 'CASTGC');
+      }
 
       return {
         accountObj: produce(state.accountObj, (accountObj) => {
