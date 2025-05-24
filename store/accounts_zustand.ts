@@ -48,7 +48,7 @@ export type AccountStoreItem = {
   isEnabled: boolean;
 };
 
-type AccountStoreStateType = {
+export type AccountStoreStateType = {
   accountObj: Record<string, AccountStoreItem>;
   accountArr: string[];
 };
