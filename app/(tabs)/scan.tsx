@@ -1,5 +1,5 @@
 import { CameraView, useCameraPermissions } from 'expo-camera';
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useState } from 'react';
 import { Pressable, StyleSheet, Text, ToastAndroid, View } from 'react-native';
 import {
   Gesture,
@@ -14,7 +14,7 @@ import {
 import Animated from 'react-native-reanimated';
 import * as Clipboard from 'expo-clipboard';
 import { useFocusEffect } from 'expo-router';
-import { getSignAble, qrSign } from '@/store/accounts_zustand';
+import { getSignAble, qrSign } from '@/utils/autoSignIn';
 
 const AnimatedCameraView = Animated.createAnimatedComponent(CameraView);
 
@@ -24,14 +24,6 @@ export default function HomeScreen() {
   if (!permission?.granted) {
     requestPermission();
   }
-
-  useFocusEffect(
-    useCallback(() => {
-      return () => {
-        setIsActive(false);
-      };
-    }, []),
-  );
 
   const scale = useSharedValue(1);
   const savedScale = useSharedValue(1);
@@ -46,6 +38,19 @@ export default function HomeScreen() {
     .onEnd(() => {
       savedScale.value = scale.value;
     });
+
+  useFocusEffect(
+    useCallback(() => {
+      return () => {
+        setIsActive(false);
+      };
+    }, []),
+  );
+
+  useEffect(() => {
+    scale.value = 1;
+    savedScale.value = 1;
+  }, [isActive, savedScale, scale]);
 
   console.log('重渲染');
 

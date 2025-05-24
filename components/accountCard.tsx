@@ -1,4 +1,4 @@
-import { autoSign, useAccountStore } from '@/store/accounts_zustand';
+import { useAccountStore } from '@/store/accounts_zustand';
 import { accountState, accountStateColor } from '@/types/accountState';
 import { View, Text, GestureResponderEvent, Pressable } from 'react-native';
 import AntDesignIcon from '@expo/vector-icons/AntDesign';
@@ -7,6 +7,9 @@ import myAlert from './myAlert';
 import React from 'react';
 import { useLog } from '@/store/log_zustand';
 import { clearCookie } from '@/store/cookieStore';
+import myPrompt from './myPrompt';
+import { autoSign } from '@/utils/autoSignIn';
+import { parseManualMessage } from '@/utils/parseManualMessage';
 
 const IconSize = 20;
 
@@ -63,13 +66,22 @@ function AccountCard({ userId }: { userId: string }) {
           description="登录"
           onPress={() => {
             as.updateUserState(info.userId, accountState.pending);
-            as.loginFunc(info.userId).then((v) => {
-              if (v) {
-                as.updateUserState(info.userId, accountState.logged);
-              } else if (v === false) {
-                throw Error('检测登录失败');
-              }
-            });
+            as.loginFunc(info.userId)
+              .then((v) => {
+                if (v) {
+                  as.updateUserState(info.userId, accountState.logged);
+                } else if (v === false) {
+                  throw Error('检测登录失败');
+                }
+              })
+              .catch((e) => {
+                myAlert('登录错误', e instanceof Error ? e.message : '');
+                addLog(
+                  ['登录错误', e instanceof Error ? e.message : ''],
+                  info.userId,
+                );
+                as.updateUserState(info.userId, accountState.logFailed);
+              });
           }}
         />
         <IconCol
@@ -126,6 +138,11 @@ function AccountCard({ userId }: { userId: string }) {
                   info.userId,
                 );
               });
+          }}
+          onLongPress={() => {
+            myPrompt('请输入签到有关信息', '', (m) => {
+              parseManualMessage(userId, m);
+            });
           }}
         />
         <IconCol

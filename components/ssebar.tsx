@@ -6,7 +6,7 @@ import { Pressable, TextInput, View, Text, StyleSheet } from 'react-native';
 import EventSource, { EventSourceListener } from 'react-native-sse';
 import myAlert from './myAlert';
 import { Storage } from 'expo-sqlite/kv-store';
-import { getSignAble, qrSign } from '@/store/accounts_zustand';
+import { getSignAble, qrSign } from '@/utils/autoSignIn';
 
 const description = {
   [accountState.plain]: '连接服务器',

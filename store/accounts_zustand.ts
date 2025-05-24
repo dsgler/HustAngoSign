@@ -305,39 +305,72 @@ export const useAccountStore = create<
     save();
   };
 
+  const request = async ({
+    inbody,
+    method,
+    url,
+    userId,
+    headers,
+    shouldSave,
+  }: {
+    method: 'GET' | 'POST';
+    userId: string;
+    url: string;
+    inbody?: string;
+    headers?: headersType;
+    shouldSave?: boolean;
+  }) => {
+    const u = get().accountObj[userId];
+    if (!u) throw UserNotExist;
+
+    if (isUseNativeLog) {
+      if (method === 'GET') {
+        return Ancheck.get(userId, url, headers ?? wechatHeader);
+      } else {
+        if (!inbody) throw Error('POST 必须传递body');
+
+        return Ancheck.post(
+          userId,
+          url,
+          inbody,
+          headers ? { ...wechatHeader, ...headers } : wechatHeader,
+        );
+      }
+    } else {
+      const release = await cookielock.acquire();
+      try {
+        await clearCookie();
+        await setCas(u.CASTGC);
+        await loadCookie(userId);
+        let resp: Response;
+        if (method === 'GET') {
+          resp = await fetch(url, { headers });
+        } else {
+          resp = await fetch(url, {
+            headers,
+            body: inbody,
+            method: 'POST',
+          });
+        }
+
+        if (shouldSave) {
+          await storeCookie(userId);
+        }
+
+        return { statusCode: resp.status, body: await resp.text() };
+      } finally {
+        release();
+      }
+    }
+  };
+
   const Get: AccountStoreActionType['Get'] = async (
     userId: string,
     url: string,
     headers?: headersType,
     shouldSave?: boolean,
   ) => {
-    const u = get().accountObj[userId];
-    if (!u) throw UserNotExist;
-
-    if (isUseNativeLog) {
-      return Ancheck.get(userId, url, headers ?? wechatHeader);
-    } else {
-      const release = await cookielock.acquire();
-      let req: Promise<Response>;
-      try {
-        await clearCookie();
-        await setCas(u.CASTGC);
-        await loadCookie(userId);
-        req = fetch(url, { headers });
-        if (shouldSave) {
-          const resp = await req;
-
-          await storeCookie(userId);
-
-          return { statusCode: resp.status, body: await resp.text() };
-        }
-      } finally {
-        release();
-      }
-      const resp = await req;
-
-      return { statusCode: resp.status, body: await resp.text() };
-    }
+    return request({ method: 'GET', url, userId, headers, shouldSave });
   };
 
   const Post: AccountStoreActionType['Post'] = async (
@@ -347,39 +380,14 @@ export const useAccountStore = create<
     headers?: headersType,
     shouldSave?: boolean,
   ) => {
-    const u = get().accountObj[userId];
-    if (!u) throw UserNotExist;
-
-    if (isUseNativeLog) {
-      return Ancheck.post(
-        userId,
-        url,
-        inbody,
-        headers ? { ...wechatHeader, ...headers } : wechatHeader,
-      );
-    } else {
-      const release = await cookielock.acquire();
-      let req: Promise<Response>;
-      try {
-        await clearCookie();
-        await setCas(u.CASTGC);
-        await loadCookie(userId);
-        req = fetch(url, { headers, body: inbody, method: 'POST' });
-
-        if (shouldSave) {
-          const resp = await req;
-
-          await storeCookie(userId);
-
-          return { statusCode: resp.status, body: await resp.text() };
-        }
-      } finally {
-        release();
-      }
-      const resp = await req;
-
-      return { statusCode: resp.status, body: await resp.text() };
-    }
+    return request({
+      method: 'POST',
+      url,
+      userId,
+      headers,
+      inbody,
+      shouldSave,
+    });
   };
 
   return {
