@@ -1,6 +1,19 @@
-import { CameraView, useCameraPermissions } from 'expo-camera';
+import {
+  BarcodeScanningResult,
+  CameraView,
+  scanFromURLAsync,
+  useCameraPermissions,
+} from 'expo-camera';
 import { useCallback, useEffect, useState } from 'react';
-import { Pressable, StyleSheet, Text, ToastAndroid, View } from 'react-native';
+import {
+  Pressable,
+  StyleProp,
+  StyleSheet,
+  Text,
+  ToastAndroid,
+  View,
+  ViewStyle,
+} from 'react-native';
 import {
   Gesture,
   GestureDetector,
@@ -15,6 +28,8 @@ import Animated from 'react-native-reanimated';
 import * as Clipboard from 'expo-clipboard';
 import { useFocusEffect } from 'expo-router';
 import { getSignAble, qrSign } from '@/utils/autoSignIn';
+import * as ImagePicker from 'expo-image-picker';
+import myAlert from '@/components/myAlert';
 
 const AnimatedCameraView = Animated.createAnimatedComponent(CameraView);
 
@@ -30,6 +45,16 @@ export default function HomeScreen() {
   const ap = useAnimatedProps(() => ({ zoom: scale.value - 1 }));
   const [isActive, setIsActive] = useState(true);
   const [scanValue, setScanValue] = useState('加载中');
+
+  const onScanned = (scanned: { data: string }) => {
+    console.log('scanned', scanned);
+    setScanValue(scanned.data);
+    setIsActive(false);
+
+    Object.values(getSignAble()).forEach((info) => {
+      qrSign(info.userId, scanned.data);
+    });
+  };
 
   const pinchGesture = Gesture.Pinch()
     .onUpdate((e) => {
@@ -66,15 +91,7 @@ export default function HomeScreen() {
                   barcodeScannerSettings={{
                     barcodeTypes: ['qr'],
                   }}
-                  onBarcodeScanned={(scanned) => {
-                    console.log('scanned', scanned);
-                    setScanValue(scanned.data);
-                    setIsActive(false);
-
-                    Object.values(getSignAble()).forEach((info) => {
-                      qrSign(info.userId, scanned.data);
-                    });
-                  }}
+                  onBarcodeScanned={onScanned}
                   animatedProps={ap}
                 ></AnimatedCameraView>
               ) : (
@@ -109,6 +126,16 @@ export default function HomeScreen() {
               )}
             </View>
           </GestureDetector>
+          <View style={[StyleSheet.absoluteFill]}>
+            <PickComponent
+              onScanned={onScanned}
+              style={{
+                position: 'absolute',
+                bottom: 50,
+                alignItems: 'center',
+              }}
+            />
+          </View>
         </View>
       </GestureHandlerRootView>
     </View>
@@ -127,3 +154,50 @@ const styles = StyleSheet.create({
   button: { fontSize: 16, textAlign: 'center' },
   text: {},
 });
+
+const PickComponent = ({
+  onScanned,
+  style,
+}: {
+  onScanned: (scanned: BarcodeScanningResult) => void;
+  style?: StyleProp<ViewStyle>;
+}) => {
+  const [imageUri, setImageUri] = useState('');
+
+  useEffect(() => {
+    if (imageUri) {
+      scanFromURLAsync(imageUri, ['qr']).then((scanned) => {
+        if (scanned.length !== 1) {
+          myAlert('扫描到的二维码个数不为1', scanned.length.toString());
+          return;
+        }
+
+        onScanned(scanned[0]);
+      }, console.log);
+    }
+  }, [imageUri, onScanned]);
+
+  return (
+    <View style={style}>
+      <Pressable
+        onPress={async () => {
+          let result = await ImagePicker.launchImageLibraryAsync({
+            mediaTypes: ['images', 'videos'],
+            allowsEditing: true,
+            aspect: [4, 3],
+            quality: 1,
+          });
+
+          console.log(result);
+
+          if (!result.canceled) {
+            setImageUri(result.assets[0].uri);
+          }
+        }}
+        style={{ backgroundColor: 'azure', padding: 20 }}
+      >
+        <Text style={{ fontSize: 16 }}>选择图片</Text>
+      </Pressable>
+    </View>
+  );
+};
