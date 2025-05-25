@@ -126,15 +126,20 @@ export default function HomeScreen() {
               )}
             </View>
           </GestureDetector>
-          <View style={[StyleSheet.absoluteFill]}>
-            <PickComponent
-              onScanned={onScanned}
+          <View
+            style={[
+              StyleSheet.absoluteFill,
+              { flexDirection: 'column-reverse' },
+            ]}
+          >
+            <View
               style={{
-                position: 'absolute',
-                bottom: 50,
+                marginBottom: 30,
                 alignItems: 'center',
               }}
-            />
+            >
+              <PickComponent onScanned={onScanned} />
+            </View>
           </View>
         </View>
       </GestureHandlerRootView>
@@ -182,9 +187,8 @@ const PickComponent = ({
       <Pressable
         onPress={async () => {
           let result = await ImagePicker.launchImageLibraryAsync({
-            mediaTypes: ['images', 'videos'],
-            allowsEditing: true,
-            aspect: [4, 3],
+            mediaTypes: ['images'],
+            // allowsEditing: true,
             quality: 1,
           });
 
@@ -194,7 +198,12 @@ const PickComponent = ({
             setImageUri(result.assets[0].uri);
           }
         }}
-        style={{ backgroundColor: 'azure', padding: 20 }}
+        style={{
+          backgroundColor: '#74b9ff',
+          paddingVertical: 10,
+          paddingHorizontal: 20,
+          borderRadius: 15,
+        }}
       >
         <Text style={{ fontSize: 16 }}>选择图片</Text>
       </Pressable>
