@@ -11,7 +11,7 @@ export const MyCheckBox = ({
 }) => {
   return (
     <AntDesignIcon.Button
-      name={isChecked ? 'checksquare' : 'closesquare'}
+      name={isChecked ? 'check-square' : 'close-square'}
       size={size ?? 32}
       onPress={() => {
         setIsChecked?.(!isChecked);

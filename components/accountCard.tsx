@@ -118,7 +118,7 @@ function AccountCard({ userId }: { userId: string }) {
           }}
         />
         <IconCol
-          name="rocket1"
+          name="rocket"
           description="自动"
           onPress={() => {
             autoSign(info.userId)

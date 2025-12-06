@@ -37,18 +37,21 @@ export default function AddOrEditUser() {
         onChangeText={setUserId}
         placeholder="请输入用户ID"
         editable={isAdd.current}
+        placeholderTextColor={'grey'}
       />
       <TextInput
         style={styles.TextInput}
         value={Passwd}
         onChangeText={setPasswd}
         placeholder="请输入密码"
+        placeholderTextColor={'grey'}
       />
       <TextInput
         style={styles.TextInput}
         value={CASTGC}
         onChangeText={setCASTGC}
         placeholder="请输入CASTGC"
+        placeholderTextColor={'grey'}
       />
       <Pressable
         onPress={() => {

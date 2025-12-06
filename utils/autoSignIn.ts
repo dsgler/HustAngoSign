@@ -17,6 +17,7 @@ import {
   useAccountStore,
 } from '@/store/accounts_zustand';
 import { useLog } from '@/store/log_zustand';
+import myPrompt from '@/components/myPrompt';
 
 export const getSignAble = (): AccountStoreStateType['accountObj'] => {
   const accountObj: AccountStoreStateType['accountObj'] =
@@ -149,16 +150,32 @@ export const autoSign = async (userId: string) => {
 
   const signable = list.data.array.filter((v) => v.status === 1);
 
-  if (signable.length !== 1) {
+  if (signable.length === 0) {
     throw Error(
       `可签到数应为1，但得到${signable.length} ` +
         JSON.stringify(list.data.array),
     );
   }
+  let k = 0;
+  if (signable.length !== 1) {
+    await new Promise<void>((rs, rj) => {
+      myPrompt(
+        '可签到数不为1，请选择',
+        signable.map((v, k) => `${k}:${v.nameOne}`).toString(),
+        (m) => {
+          k = Number(m);
+          if (Number.isNaN(k)) {
+            rj();
+          }
+          rs();
+        },
+      );
+    });
+  }
 
-  useLog.getState().addLog(otherIds[signable[0].otherId], userId);
+  useLog.getState().addLog(otherIds[signable[k].otherId], userId);
 
-  switch (signable[0].otherId) {
+  switch (signable[k].otherId) {
     case '2': {
       throw Error(otherIds[signable[0].otherId] + ',请扫码');
     }

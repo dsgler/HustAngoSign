@@ -1,5 +1,8 @@
 import { NativeModules } from 'react-native';
 import { AncheckInterface } from './Anchek';
+import { isUseNativeLog } from '@/constants/isUseNativeLog';
 
 export const Ancheck: AncheckInterface = NativeModules.Ancheck;
-Ancheck.InitStore();
+if (isUseNativeLog) {
+  Ancheck.InitStore();
+}

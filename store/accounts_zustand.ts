@@ -33,11 +33,10 @@ import CookieManager from '@react-native-cookies/cookies';
 import { cookielock } from '@/locks/cookielock';
 import { wechatHeader } from '@/constants/header';
 import { loadCookie, storeCookie } from './cookieStore';
+import { isUseNativeLog } from '../constants/isUseNativeLog';
 
 export const UserNotExist = Error('此用户不存在');
 const AccountStoreKey = '_MyAccountStore';
-
-const isUseNativeLog = false;
 
 export type AccountStoreItem = {
   userId: string;

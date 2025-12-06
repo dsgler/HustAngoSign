@@ -23,8 +23,8 @@ const ServerUrlKey = 'ServerUrlKey651321';
 
 export default function SseBar() {
   const [url, setUrl] = useState('');
-  const esRef = useRef<EventSource<myEvents>>();
-  const timerId = useRef<any>();
+  const esRef = useRef<EventSource<myEvents>>(null);
+  const timerId = useRef<any>(null);
   const [sseState, setSseState] = useState(accountState.plain);
   useEffect(() => {
     Storage.getItemAsync(ServerUrlKey).then((v) => {
@@ -98,10 +98,11 @@ export default function SseBar() {
     <View style={{ paddingHorizontal: 20 }}>
       <View style={{ paddingVertical: 10 }}>
         <TextInput
-          style={{ lineHeight: 32, fontSize: 16 }}
+          style={{ lineHeight: 32, fontSize: 16, color: 'black' }}
           value={url}
           onChangeText={setUrl}
           placeholder="请输入服务器url"
+          placeholderTextColor="grey"
         />
       </View>
       <View style={{ flexDirection: 'row', gap: 5 }}>

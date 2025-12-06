@@ -15,7 +15,7 @@ export default function TabsLayout() {
       <Tabs.Screen
         name="logs"
         options={{
-          tabBarIcon: () => <AntIcon name="codesquareo" size={IconSize} />,
+          tabBarIcon: () => <AntIcon name="code" size={IconSize} />,
         }}
       />
       <Tabs.Screen
