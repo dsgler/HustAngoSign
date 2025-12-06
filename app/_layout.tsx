@@ -12,7 +12,6 @@ export default function RootLayout() {
   return (
     <>
       <Stack screenOptions={{ headerShown: false }}></Stack>
-      {/* eslint-disable-next-line react/style-prop-object */}
       <StatusBar style="auto" />
     </>
   );

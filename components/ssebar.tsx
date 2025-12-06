@@ -24,7 +24,7 @@ const ServerUrlKey = 'ServerUrlKey651321';
 export default function SseBar() {
   const [url, setUrl] = useState('');
   const esRef = useRef<EventSource<myEvents>>(null);
-  const timerId = useRef<any>(null);
+  const timerId = useRef<number>(-1);
   const [sseState, setSseState] = useState(accountState.plain);
   useEffect(() => {
     Storage.getItemAsync(ServerUrlKey).then((v) => {

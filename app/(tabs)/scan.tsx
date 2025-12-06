@@ -19,12 +19,11 @@ import {
   GestureDetector,
   GestureHandlerRootView,
 } from 'react-native-gesture-handler';
-import {
+import Animated, {
   clamp,
   useAnimatedProps,
   useSharedValue,
 } from 'react-native-reanimated';
-import Animated from 'react-native-reanimated';
 import * as Clipboard from 'expo-clipboard';
 import { useFocusEffect } from 'expo-router';
 import { getSignAble, qrSign } from '@/utils/autoSignIn';
@@ -186,7 +185,7 @@ const PickComponent = ({
     <View style={style}>
       <Pressable
         onPress={async () => {
-          let result = await ImagePicker.launchImageLibraryAsync({
+          const result = await ImagePicker.launchImageLibraryAsync({
             mediaTypes: ['images'],
             // allowsEditing: true,
             quality: 1,

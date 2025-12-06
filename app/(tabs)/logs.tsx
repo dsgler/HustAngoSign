@@ -1,8 +1,7 @@
-import { Pressable, Text, ToastAndroid } from 'react-native';
+import { Pressable, Text, ToastAndroid, FlatList } from 'react-native';
 import * as Clipboard from 'expo-clipboard';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { formatLog, useLog } from '@/store/log_zustand';
-import { FlatList } from 'react-native';
 
 export default function Logs() {
   const log = useLog((state) => state.logs);
