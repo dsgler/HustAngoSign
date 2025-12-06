@@ -25,10 +25,11 @@ import Animated, {
   useSharedValue,
 } from 'react-native-reanimated';
 import * as Clipboard from 'expo-clipboard';
-import { useFocusEffect } from 'expo-router';
+import { router, useFocusEffect } from 'expo-router';
 import { getSignAble, qrSign } from '@/utils/autoSignIn';
 import * as ImagePicker from 'expo-image-picker';
 import myAlert from '@/components/myAlert';
+import myPrompt from '@/components/myPrompt';
 
 const AnimatedCameraView = Animated.createAnimatedComponent(CameraView);
 
@@ -196,6 +197,11 @@ const PickComponent = ({
           if (!result.canceled) {
             setImageUri(result.assets[0].uri);
           }
+        }}
+        onLongPress={() => {
+          myPrompt('请输入自定义url', '', (url) => {
+            router.push({ pathname: '/customWebView', params: { url } });
+          });
         }}
         style={{
           backgroundColor: '#74b9ff',

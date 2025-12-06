@@ -5,9 +5,10 @@ import {
   FirstSignInListUrl,
   getPosiSignInUrl,
   getQrSignInUrl,
+  getGestureSignInUrl,
+  getPreSignUrl,
 } from '@/constants/urls';
 import { otherIds } from '@/types/otherIds';
-import { getGestureSignInUrl, getPreSignUrl } from '@/constants/urls';
 import { getIsSignInSuccess } from '@/utils/getIsSignInSuccess';
 import { getPosition } from '@/utils/getPosition';
 import myAlert from '@/components/myAlert';
@@ -18,6 +19,8 @@ import {
 } from '@/store/accounts_zustand';
 import { useLog } from '@/store/log_zustand';
 import myPrompt from '@/components/myPrompt';
+import { router } from 'expo-router';
+import { loadCookie } from '@/store/cookieStore';
 
 export const getSignAble = (): AccountStoreStateType['accountObj'] => {
   const accountObj: AccountStoreStateType['accountObj'] =
@@ -32,7 +35,7 @@ export const getSignAble = (): AccountStoreStateType['accountObj'] => {
   );
 };
 
-export const qrSign = (userId: string, RawUrl: string) => {
+export const qrSign = async (userId: string, RawUrl: string) => {
   const addLog = useLog.getState().addLog;
   const as = useAccountStore.getState();
 
@@ -59,13 +62,25 @@ export const qrSign = (userId: string, RawUrl: string) => {
 
   addLog('签到链接:' + QrSignInUrl, 'QrSignInUrl');
 
-  as.Get(userId, QrSignInUrl, {})
+  return as
+    .Get(userId, QrSignInUrl, {})
     .then((v) => {
       if (getIsSignInSuccess(v.body)) {
         as.updateUserState(userId, accountState.checkSuccess);
       } else {
         as.updateUserState(userId, accountState.checkFailed);
-        myAlert('签到返回值错误', JSON.stringify(v));
+        // 解决某些情况下可能有人机验证的问题
+        myAlert(
+          '签到返回值错误，是否直接打开网页？',
+          JSON.stringify(v),
+          async () => {
+            await loadCookie(userId);
+            router.push({
+              pathname: '/customWebView',
+              params: { url: RawUrl },
+            });
+          },
+        );
         addLog(['签到返回值错误', JSON.stringify(v)], userId);
       }
     })
@@ -161,7 +176,7 @@ export const autoSign = async (userId: string) => {
     await new Promise<void>((rs, rj) => {
       myPrompt(
         '可签到数不为1，请选择',
-        signable.map((v, k) => `${k}:${v.nameOne}`).toString(),
+        signable.map((v, k) => `${k}:${v.nameOne}`).join('\n'),
         (m) => {
           k = Number(m);
           if (Number.isNaN(k)) {
@@ -199,7 +214,12 @@ export const autoSign = async (userId: string) => {
       break;
     }
     default: {
-      throw Error('未知的otherId:' + signable[0].otherId);
+      throw Error(
+        '未知的otherId:' +
+          signable[0].otherId +
+          '\n' +
+          JSON.stringify(signable[0]),
+      );
     }
   }
 };

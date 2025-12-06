@@ -49,4 +49,4 @@ export const clearCookie = async (userId: userIdType) => {
 };
 
 // 准备用于优化，未实装
-export let lastUserId = '';
+export const lastUserId = '';
