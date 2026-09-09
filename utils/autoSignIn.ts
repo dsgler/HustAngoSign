@@ -131,7 +131,47 @@ const posiSign = async (activeId: string, userId: string) => {
     return;
   }
 
-  const posi = getPosition(ret.body);
+  let posi: { latitude: string; longitude: string; locationText: string };
+  try {
+    posi = getPosition(ret.body);
+  } catch (e) {
+    // 无法解析位置时，弹窗手动输入：经度,纬度,位置文本（最后一个可留空）
+    const { promise, resolve, reject } = Promise.withResolvers<{
+      latitude: string;
+      longitude: string;
+      locationText: string;
+    }>();
+    myPrompt(
+      '无法获取位置，请手动输入',
+      '格式：经度,纬度,位置文本(可留空)\n例如：114.44,30.52,华中科技大学',
+      (m) => {
+        try {
+          const [lon, lat, ...textParts] = m.split(',');
+          const longitude = lon.trim();
+          const latitude = lat?.trim();
+          if (
+            !longitude ||
+            !latitude ||
+            Number.isNaN(Number(longitude)) ||
+            Number.isNaN(Number(latitude))
+          ) {
+            throw Error('经纬度格式错误，前两个参数应为数字，如 114.44,30.52');
+          }
+          resolve({
+            longitude,
+            latitude,
+            locationText: textParts.join(',').trim(),
+          });
+        } catch (err) {
+          myAlert('输入格式错误', err instanceof Error ? err.message : String(err));
+          reject(err);
+        }
+      },
+      () => reject(Error('已取消手动输入，签到中止')),
+      false,
+    );
+    posi = await promise;
+  }
 
   useLog
     .getState()

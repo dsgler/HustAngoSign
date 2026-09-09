@@ -4,12 +4,14 @@ export default function myPrompt(
   title: string,
   message: string,
   onOk?: (message: string) => void,
+  onCancel?: () => void,
+  cancelable = true,
 ) {
   prompt(
     title,
     message,
     [
-      { text: 'Close' },
+      { text: 'Close', onPress: onCancel },
       {
         text: 'Ok',
         onPress: onOk,
@@ -17,7 +19,7 @@ export default function myPrompt(
     ],
     {
       type: 'plain-text',
-      cancelable: true,
+      cancelable,
       defaultValue: '',
       placeholder: '',
     },
