@@ -135,6 +135,13 @@ const posiSign = async (activeId: string, userId: string) => {
   try {
     posi = getPosition(ret.body);
   } catch (e) {
+    // 解析位置失败：记下 preSign 原始网页，便于排查改版
+    useLog
+      .getState()
+      .addLog(
+        '位置解析失败，preSign 原网页：\n' + ret.body,
+        'posiSign 原网页',
+      );
     // 无法解析位置时，弹窗手动输入：经度,纬度,位置文本（最后一个可留空）
     // 注意：Hermes 运行时没有 Promise.withResolvers(ES2024)，只能 new Promise
     posi = await new Promise((rs, rj) => {
