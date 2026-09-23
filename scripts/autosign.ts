@@ -21,7 +21,8 @@
 //   1. 带 cookie POST FirstSignInListUrl(activelist)，body 见 FirstSignInListBody
 //   2. 取返回 JSON result===1 的 data.array 中 status===1 的第一项（位置签到 otherId===4）
 //   3. 直接 GET getPosiSignInUrl(activeId, 位置文本, 经度, 纬度) 完成签到
-//   4. 成功判定：getIsSignInSuccess —— body 含 '>Sign in successfully<' 或 '>签到成功<'
+//   4. 成功判定：getIsSignInSuccess —— body 含 '>Sign in successfully<'、
+//      '>Checked in successfully.<'（新版英文，可带/不带句号）或 '>签到成功<'
 //
 // 三、位置参数
 //   - 当前使用固定坐标（可改下面三个常量）：
